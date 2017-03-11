@@ -13,7 +13,7 @@ public class Page extends Application {
 
     @Override
     public void start(Stage stage) {
-	String page = "file:///home/sullivan/Desktop/mapPage.html"; //change this to the location of mapPage
+	String page = "http://www.public.asu.edu/~swenger";
         stage.setTitle("HTML");
         stage.setWidth(500);
         stage.setHeight(500);

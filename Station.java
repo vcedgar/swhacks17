@@ -40,7 +40,7 @@ public class Station {
 		System.out.println(getElevation(33.319433, -110.803046));
 	}
 	
-	private double accountForAlt(double startTemp, double startAlt, double endAlt) {
+	private static double accountForAlt(double startTemp, double startAlt, double endAlt) {
 		return startTemp + ((endAlt-startAlt)/1000)*3.3;
 	}
 	
@@ -161,6 +161,28 @@ public class Station {
 		}
 	}
 	
+	public static double[][] getData(double minLat, double minLong, double maxLat, double maxLong) {
+		double latitude;
+		double longitude;
+		double elevation;
+		double [][] data;
+		Station.setPersonLat((minLat + maxLat) * .5);
+		Station.setPersonLon((minLong + maxLong) * .5);
+		Station current = Station.parseCurrent()[0];
+		data = new double [(int) ((maxLong - minLong) * 100)][];
+		for (int i = 0; i < data.length; i ++) {
+			data[i] = new double [(int) ((maxLat - minLat) * 100)];
+			longitude = (i * .01) + minLong;
+			for (int j = 0; j < data[i].length; j ++) {
+				latitude = ((data[i].length - j) * .01) + minLat;
+				elevation = Station.getElevation(latitude, longitude);
+				data[i][j] = Station.accountForAlt(current.getTemp_f(), current.getElevation_m(), elevation);
+			}
+		}
+		return data;
+	}
+
+
 	//Begin getters
 	
 	public double getLatitude() {

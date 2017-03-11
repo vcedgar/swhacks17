@@ -31,10 +31,12 @@
       <version>4.8.2</version>
       <scope>test</scope>
     </dependency>
+	    //stuff from google
     <dependency>
     	<groupId>com.google.maps</groupId>
     	<artifactId>google-maps-services</artifactId>
    		<version>0.1.17</version>
-	</dependency>	
+	</dependency>
+	    //stuff ro google ends
   </dependencies>
 </project>

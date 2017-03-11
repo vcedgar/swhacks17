@@ -1,3 +1,4 @@
 Someone elses gitub that uses this stuff: https://github.com/machouinard/aviation-weather-from-noaa
 The base website for the ADDS weather API examples: https://aviationweather.gov/adds/dataserver
 Gets altitude from laditude and longitude: https://developers.google.com/maps/documentation/elevation/start
+The google maps api github for java: https://github.com/googlemaps/google-maps-services-java/blob/master/README.md

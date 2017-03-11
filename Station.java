@@ -29,11 +29,20 @@ public class Station {
 	
 		//get list of forecasts	
 		Station[] current = parseCurrent();
+		System.out.println(Arrays.toString(current));
 		
 		//print list of forecasts
-		System.out.println(Arrays.toString(current));
+		for (Station s: current) {
+			System.out.println(s.getDate()+"\t"+s.getTemp_f()+"\t"+
+					s.accountForAlt(s.getTemp_f(),s.getElevation_m(),s.getElevation_m()+1250));
+		}
+		
+		System.out.println(getElevation(33.319433, -110.803046));
 	}
 	
+	private double accountForAlt(double startTemp, double startAlt, double endAlt) {
+		return startTemp + ((endAlt-startAlt)/1000)*3.3;
+	}
 	
 	/**
 	 * get an updated array of stations from ADDS
@@ -105,6 +114,19 @@ public class Station {
 	private static Pattern regexForTag(String tag) {
 		return Pattern.compile("<"+tag+">(.*?)</"+tag+">", Pattern.DOTALL);
 	}
+	
+	private static double getElevation(double lat, double lon) {
+		String url = "https://maps.googleapis.com/maps/api/elevation/xml?locations="+lat+","+lon+"&key=AIzaSyCVahlCVNyQ0gyBPJDhMO6oFE9mqWUD4qU";
+		System.out.println(url);
+		String xml = getUrlSource(url);
+		
+		Pattern elevation = regexForTag("elevation");
+		Matcher elevationMatch = elevation.matcher(xml);
+		
+		elevationMatch.find();
+		return Double.parseDouble(elevationMatch.group(1))*3.28084;
+	}
+	
 	/**
 	 * create request for api
 	 * @param d

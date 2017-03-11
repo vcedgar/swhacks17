@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 /**
  * Station class containing basic readings from stations
- * @author zachary, Abdul
+ * @author zachary, Abdul, Sullivan
  *
  */
 public class Station {
@@ -166,17 +166,18 @@ public class Station {
 		double longitude;
 		double elevation;
 		double [][] data;
-		Station.setPersonLat((minLat + maxLat) * .5);
-		Station.setPersonLon((minLong + maxLong) * .5);
-		Station current = Station.parseCurrent()[0];
+		Station current;
 		data = new double [(int) ((maxLong - minLong) * 100)][];
 		for (int i = 0; i < data.length; i ++) {
 			data[i] = new double [(int) ((maxLat - minLat) * 100)];
 			longitude = (i * .01) + minLong;
+			setPersonLon(longitude);
 			for (int j = 0; j < data[i].length; j ++) {
+				current = Station.parseCurrent()[0];
 				latitude = ((data[i].length - j) * .01) + minLat;
-				elevation = Station.getElevation(latitude, longitude);
-				data[i][j] = Station.accountForAlt(current.getTemp_f(), current.getElevation_m(), elevation);
+				setPersonLat(latitude);
+				elevation = getElevation(latitude, longitude);
+				data[i][j] = accountForAlt(current.getTemp_f(), current.getElevation_m(), elevation);
 			}
 		}
 		return data;

@@ -113,5 +113,24 @@ public class Station {
 				"Elevation: "+this.elevation_m+"\n"+
 				"Temp in Celcius: "+this.temp_c;
 	}
+	private static double getDistance(double la1, double lo1, double la2, double lo2)
+	{
+		double distance = Math.acos(Math.sin(deg2rad(la1)) * Math.sin(deg2rad(la2)) + 
+				Math.cos(deg2rad(la1)) * Math.cos(deg2rad(la2)) * Math.cos(deg2rad(lo2 - lo1)));
+		return (rad2deg(distance) * 60.0 * 1.1515);
+	}
+	private static double deg2rad(double deg)
+	{
+		return (deg * Math.PI/180.0);
+	}
+	private static double rad2deg(double rad)
+	{
+		return (rad * 180.0 / Math.PI);
+	}
+	private static double getTempInFahrenheit(double temp)
+	{
+		temp = ((temp * 9 / 5.0) + 32);
+		return temp;
+	}
 }
 

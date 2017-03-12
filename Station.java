@@ -38,6 +38,11 @@ public class Station {
 		}
 		
 		System.out.println(getElevation(33.319433, -110.803046));
+
+		double[][] temperature = getData(32, -115, 34, -108);
+		System.out.println(temperature.length);
+		System.out.println(temperature[0].length);
+		System.out.println(temperature[0][0]);
 	}
 	
 	private static double accountForAlt(double startTemp, double startAlt, double endAlt) {
@@ -117,7 +122,7 @@ public class Station {
 	
 	private static double getElevation(double lat, double lon) {
 		String url = "https://maps.googleapis.com/maps/api/elevation/xml?locations="+lat+","+lon+"&key=AIzaSyCVahlCVNyQ0gyBPJDhMO6oFE9mqWUD4qU";
-		System.out.println(url);
+	//	System.out.println(url);
 		String xml = getUrlSource(url);
 		
 		Pattern elevation = regexForTag("elevation");
@@ -162,19 +167,32 @@ public class Station {
 	}
 	
 	public static double[][] getData(double minLat, double minLong, double maxLat, double maxLong) {
+		final double resolution = 1;
 		double latitude;
 		double longitude;
 		double elevation;
 		double [][] data;
 		Station current;
-		data = new double [(int) ((maxLong - minLong) * 100)][];
+		Station [] parsed;
+		data = new double [(int) ((maxLong - minLong) * resolution)][];
 		for (int i = 0; i < data.length; i ++) {
-			data[i] = new double [(int) ((maxLat - minLat) * 100)];
-			longitude = (i * .01) + minLong;
+			data[i] = new double [(int) ((maxLat - minLat) * resolution)];
+			longitude = (i / resolution) + minLong;
 			setPersonLon(longitude);
 			for (int j = 0; j < data[i].length; j ++) {
-				current = Station.parseCurrent()[0];
-				latitude = ((data[i].length - j) * .01) + minLat;
+				try {
+					parsed = parseCurrent();
+				}
+				catch (NullPointerException e) {
+					data[i][i] = -500;
+					continue;
+				}
+				if (parsed.length == 0 || parsed == null) {
+					data[i][j] = -500;
+					continue;
+				}
+				current = parsed[0];
+				latitude = ((data[i].length - j) / resolution) + minLat;
 				setPersonLat(latitude);
 				elevation = getElevation(latitude, longitude);
 				data[i][j] = accountForAlt(current.getTemp_f(), current.getElevation_m(), elevation);

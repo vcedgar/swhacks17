@@ -1,3 +1,5 @@
+package application;
+
 import java.net.*;
 import java.awt.Color;
 import java.awt.FlowLayout;
@@ -41,6 +43,18 @@ public class Station {
 		frame.pack();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setVisible(true);
+	}
+	
+	private double newTemp(){
+		return this.getTemp_f() + ((getElevation(getPersonLat(), getPersonLon())-this.getElevation_m())/1000)*3.3;
+	}
+	
+	public static Forecast[] getForecasts(Station[] stations){
+		Forecast[] forecasts = new Forecast[stations.length];
+		for(int i = 0; i < stations.length; i++){
+			forecasts[i] = new Forecast(stations[i].getDate(), stations[i].newTemp());
+		}
+		return forecasts;
 	}
 	
 	public static JLabel getImage(double lat, double lon,double range) {
@@ -102,7 +116,7 @@ public class Station {
 	 * get an updated array of stations from ADDS
 	 * @return array of stations
 	 */
-	private static Station[] parseCurrent() {
+	public static Station[] parseCurrent() {
 		//get the hml file from the website from the nearest station to the person
 		String fullXML = getMetars(personLat, personLon);
 		

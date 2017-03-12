@@ -15,6 +15,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+    	 //Font.loadFont(M.class.getResource("TRON.TTF").toExternalForm(), 10);
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("AddressApp");
         
@@ -26,6 +27,7 @@ public class Main extends Application {
 
             // Show the scene containing the root layout.
             Scene scene = new Scene(rootLayout);
+            //scene.getStylesheets().add(getClass().getResource("/application.css").toExternalForm());
             primaryStage.setScene(scene);
             primaryStage.show();
         } catch (IOException e) {

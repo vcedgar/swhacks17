@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,28 +31,21 @@ public class Station {
 	private String date;
 	
 	public static void main(String args[]) {
-		//example
-		//makeImage(new double[][]{{40,45,40},{35,120,37},{32,29,25}});
-		makeImage(getData(32, -115, 34, -108));
+		JFrame frame = new JFrame("JFrame Example");
+		JPanel panel = new JPanel();
+		panel.setLayout(new FlowLayout());
 
+		panel.add(getImage(33,-110,.1));
 		
-		//set person's location to pinal mountain near globe
-		Station.setPersonLat(33.3);
-		Station.setPersonLon(-110.8);
-	
-		//get list of forecasts	
-		Station[] current = parseCurrent();
-		
-		//print list of forecasts
-		for (Station s: current) {
-			System.out.println(s.getDate()+"\t"+s.getTemp_f()+"\t"+
-					accountForAlt(s.getTemp_f(),s.getElevation_m(),s.getElevation_m()+1250));
-		}
-		
-		System.out.println(getElevation(33.319433, -110.803046));
-		
+		frame.add(panel);
+		frame.pack();
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setVisible(true);
 	}
 	
+	public static JLabel getImage(double lat, double lon,double range) {
+		return new JLabel(new ImageIcon(makeImage(getData(lat-range,lon-range,lat+range,lon+range))));
+	}
 	
 	private static BufferedImage makeImage(double[][] data) {
 		final int size = 500;
@@ -59,9 +53,6 @@ public class Station {
 		
 		BufferedImage image = new BufferedImage(size,size,BufferedImage.TYPE_INT_RGB);
 		
-		for (double[] temps : data) {
-			System.out.println(Arrays.toString(temps));
-		}
 		
 		Graphics2D graphic = image.createGraphics();
 		ArrayList<Color> colors = new ArrayList<Color>();
@@ -76,29 +67,29 @@ public class Station {
 		
 		double rowInc = size/data[0].length;
 		double colInc = size/data.length;
-				
+		
 		for (int total = 0; total < data.length*data[0].length; total++) {
 			int row = total/data.length;
 			int col = total%data.length;
 								
 			if (data[col][row]==-500) graphic.setColor(Color.GRAY);
 			else {
-				int colorIndex = 601 - (int)(data[col][row]*(601/120));
+				int colorIndex = 600 - (int)((data[col][row])*(600/120));
 				graphic.setColor(colors.get(colorIndex));
 			}
 			
 			graphic.fillRect((int)(row*rowInc),(int)(col*colInc),(int)rowInc,(int)colInc);
 		}
-		/*for (int total = 0; total <= 601; total++) {
-			graphic.fillRect((int)(row*rowInc),(int)(col*colInc),(int)rowInc,(int)colInc);
-		}*/
+		int count  = 0;
+		for (int x = 0; x < 120; x+=10) {
+			int color = 600 - (int)((x)*(600/(120)));
 			
-			
-		JFrame frame = new JFrame();
-		frame.getContentPane().setLayout(new FlowLayout());
-		frame.getContentPane().add(new JLabel(new ImageIcon(image)));
-		frame.pack();
-		frame.setVisible(true);
+			graphic.setColor(Color.WHITE);
+			graphic.fillRect(0, count*20, 30, 20);
+			graphic.setColor(colors.get(color));
+			graphic.drawString(""+x, 1, count*20);
+			count++;
+		}
 		
 		return image;
 	}
@@ -144,7 +135,6 @@ public class Station {
 			Pattern period = regexForTag("period");
 			Matcher periodMatch = period.matcher(fullXML);
 			
-			System.out.println(locationMatch.group(1));
 			//for each period
 			while(periodMatch.find()) {
 				//setup a station  object reflecting data
@@ -224,10 +214,13 @@ public class Station {
 		}
 	}
 	public static double[][] getData(double minLat, double minLon, double maxLat, double maxLon) {
-		final int res = 30;
+		final int res = 5;
+		System.out.println(String.format("Creating a weather map spanning from (%f, %f) to (%f, %f)\nwith a total resolution of %d\n", minLat, minLon, maxLat, maxLon,res*res));
+
 		double[][] data = new double[res][res];
 		for (int i = 0; i < res; i++) {
 			for(int j = 0; j < res; j++) {
+				System.out.println(((i*res+j)/((double)res*res)*100)+"% complete");
 				double lat = i*((maxLat-minLat)/res)+minLat;
 				double lon = j*((maxLon-minLon)/res)+minLon;
 				setPersonLat(lat);

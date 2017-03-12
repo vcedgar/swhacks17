@@ -1,14 +1,23 @@
 import java.net.*;
+import java.awt.Color;
+import java.awt.FlowLayout;
+import java.awt.Graphics2D;
+import java.awt.List;
+import java.awt.image.BufferedImage;
 import java.io.*;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 /**
  * Station class containing basic readings from stations
- * @author zachary, Abdul, Sullivan
+ * @author zachary, Abdul
  *
  */
 public class Station {
@@ -22,6 +31,9 @@ public class Station {
 	
 	public static void main(String args[]) {
 		//example
+		//makeImage(new double[][]{{40,45,40},{35,120,37},{32,29,25}});
+		makeImage(getData(32, -115, 34, -108));
+
 		
 		//set person's location to pinal mountain near globe
 		Station.setPersonLat(33.3);
@@ -29,20 +41,66 @@ public class Station {
 	
 		//get list of forecasts	
 		Station[] current = parseCurrent();
-		System.out.println(Arrays.toString(current));
 		
 		//print list of forecasts
 		for (Station s: current) {
 			System.out.println(s.getDate()+"\t"+s.getTemp_f()+"\t"+
-					s.accountForAlt(s.getTemp_f(),s.getElevation_m(),s.getElevation_m()+1250));
+					accountForAlt(s.getTemp_f(),s.getElevation_m(),s.getElevation_m()+1250));
 		}
 		
 		System.out.println(getElevation(33.319433, -110.803046));
-
-		double[][] temperature = getData(32, -115, 34, -108);
-		System.out.println(temperature.length);
-		System.out.println(temperature[0].length);
-		System.out.println(temperature[0][0]);
+		
+	}
+	
+	
+	private static BufferedImage makeImage(double[][] data) {
+		final int size = 500;
+		
+		
+		BufferedImage image = new BufferedImage(size,size,BufferedImage.TYPE_INT_RGB);
+		
+		for (double[] temps : data) {
+			System.out.println(Arrays.toString(temps));
+		}
+		
+		Graphics2D graphic = image.createGraphics();
+		ArrayList<Color> colors = new ArrayList<Color>();
+		for (int r=0; r<100; r++) colors.add(new Color(r*255/100,       255,         0));
+		for (int g=100; g>0; g--) colors.add(new Color(      255, g*255/100,         0));
+		for (int b=0; b<100; b++) colors.add(new Color(      255,         0, b*255/100));
+		for (int r=100; r>0; r--) colors.add(new Color(r*255/100,         0,       255));
+		for (int g=0; g<100; g++) colors.add(new Color(        0, g*255/100,       255));
+		for (int b=100; b>0; b--) colors.add(new Color(        0,       255, b*255/100));
+		                          colors.add(new Color(        0,       255,         0));
+		
+		
+		double rowInc = size/data[0].length;
+		double colInc = size/data.length;
+				
+		for (int total = 0; total < data.length*data[0].length; total++) {
+			int row = total/data.length;
+			int col = total%data.length;
+								
+			if (data[col][row]==-500) graphic.setColor(Color.GRAY);
+			else {
+				int colorIndex = 601 - (int)(data[col][row]*(601/120));
+				graphic.setColor(colors.get(colorIndex));
+			}
+			
+			graphic.fillRect((int)(row*rowInc),(int)(col*colInc),(int)rowInc,(int)colInc);
+		}
+		/*for (int total = 0; total <= 601; total++) {
+			graphic.fillRect((int)(row*rowInc),(int)(col*colInc),(int)rowInc,(int)colInc);
+		}*/
+			
+			
+		JFrame frame = new JFrame();
+		frame.getContentPane().setLayout(new FlowLayout());
+		frame.getContentPane().add(new JLabel(new ImageIcon(image)));
+		frame.pack();
+		frame.setVisible(true);
+		
+		return image;
 	}
 	
 	private static double accountForAlt(double startTemp, double startAlt, double endAlt) {
@@ -58,7 +116,7 @@ public class Station {
 		String fullXML = getMetars(personLat, personLon);
 		
 		//parse the station's location data
-		Pattern location = Pattern.compile("<Forecast location=(.*?)>", Pattern.DOTALL);
+		Pattern location = Pattern.compile("<Forecast location=.*?lat=(.*?)>", Pattern.DOTALL);
 		Matcher locationMatch = location.matcher(fullXML);
 		
 		//seperate the numbers pattern
@@ -68,7 +126,7 @@ public class Station {
 		ArrayList<Station> stations = new ArrayList<>();
 		
 		//lists of strings from parsed numbers
-		String[] info = new String[4];
+		String[] info = new String[3];
 		
 		//if a location was actually found
 		if (locationMatch.find()) {
@@ -86,13 +144,14 @@ public class Station {
 			Pattern period = regexForTag("period");
 			Matcher periodMatch = period.matcher(fullXML);
 			
+			System.out.println(locationMatch.group(1));
 			//for each period
 			while(periodMatch.find()) {
 				//setup a station  object reflecting data
 				Station current = new Station();
-				current.setLatitude(Double.parseDouble(info[1]));
-				current.setLongitude(Double.parseDouble(info[2]));
-				current.setElevation_m(Double.parseDouble(info[3]));
+				current.setLatitude(Double.parseDouble(info[0]));
+				current.setLongitude(Double.parseDouble(info[1]));
+				current.setElevation_m(Double.parseDouble(info[2]));
 				
 				Pattern temp = Pattern.compile("<temp .*?>([0-9.]+?)</temp>",Pattern.DOTALL);
 				Matcher tempMatcher = temp.matcher(periodMatch.group(1));
@@ -122,7 +181,6 @@ public class Station {
 	
 	private static double getElevation(double lat, double lon) {
 		String url = "https://maps.googleapis.com/maps/api/elevation/xml?locations="+lat+","+lon+"&key=AIzaSyCVahlCVNyQ0gyBPJDhMO6oFE9mqWUD4qU";
-	//	System.out.println(url);
 		String xml = getUrlSource(url);
 		
 		Pattern elevation = regexForTag("elevation");
@@ -165,42 +223,28 @@ public class Station {
 			throw new RuntimeException(e);
 		}
 	}
-	
-	public static double[][] getData(double minLat, double minLong, double maxLat, double maxLong) {
-		final double resolution = 1;
-		double latitude;
-		double longitude;
-		double elevation;
-		double [][] data;
-		Station current;
-		Station [] parsed;
-		data = new double [(int) ((maxLong - minLong) * resolution)][];
-		for (int i = 0; i < data.length; i ++) {
-			data[i] = new double [(int) ((maxLat - minLat) * resolution)];
-			longitude = (i / resolution) + minLong;
-			setPersonLon(longitude);
-			for (int j = 0; j < data[i].length; j ++) {
-				try {
-					parsed = parseCurrent();
+	public static double[][] getData(double minLat, double minLon, double maxLat, double maxLon) {
+		final int res = 30;
+		double[][] data = new double[res][res];
+		for (int i = 0; i < res; i++) {
+			for(int j = 0; j < res; j++) {
+				double lat = i*((maxLat-minLat)/res)+minLat;
+				double lon = j*((maxLon-minLon)/res)+minLon;
+				setPersonLat(lat);
+				setPersonLon(lon);
+				
+				Station[] current = parseCurrent();
+				if (current.length>0) {
+					Station s = current[0];
+					data[i][j] = accountForAlt(s.getTemp_f(),s.getElevation_m(),getElevation(s.getLatitude(),s.getLongitude()));
 				}
-				catch (NullPointerException e) {
-					data[i][i] = -500;
-					continue;
+				else {
+					data[i][j]=-500;
 				}
-				if (parsed.length == 0 || parsed == null) {
-					data[i][j] = -500;
-					continue;
-				}
-				current = parsed[0];
-				latitude = ((data[i].length - j) / resolution) + minLat;
-				setPersonLat(latitude);
-				elevation = getElevation(latitude, longitude);
-				data[i][j] = accountForAlt(current.getTemp_f(), current.getElevation_m(), elevation);
 			}
 		}
 		return data;
 	}
-
 
 	//Begin getters
 	
